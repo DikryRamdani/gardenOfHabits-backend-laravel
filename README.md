@@ -1,24 +1,30 @@
-# 🌿 Garden of Habits (REST API Backend)
+# Garden of Habits (REST API Backend)
 
 RESTful API untuk aplikasi pelacak tugas dan kebiasaan berbasis gamifikasi kebun virtual (*virtual garden*), dilengkapi dengan sistem peningkatan level progresif, streak produktivitas, serta timer Pomodoro.
 
 ---
 
-## 🏛️ Pola Arsitektur (Service-Repository Pattern)
+## Pola Arsitektur (Service-Repository Pattern dengan Interface)
 
-Proyek ini menerapkan **Service-Repository Pattern** untuk memisahkan logika bisnis dari akses basis data secara terstruktur, meningkatkan kemudahan pemeliharaan (*maintainability*), modularitas kode, serta kemudahan dalam pembuatan unit testing (*testability*).
+Proyek ini menerapkan **Service-Repository Pattern** menggunakan **Interfaces/Contracts** untuk memisahkan secara ketat logika bisnis dari detail akses data. 
 
 ```mermaid
 graph TD
     Controller[TaskController / GardenController] -->|Delegasi Bisnis| Service[TaskService / GardenService / ExpService]
-    Service -->|Operasi Database| Repository[TaskRepository / GardenRepository / UserRepository]
+    Service -->|Panggil Interface| Contract[UserRepositoryInterface / TaskRepositoryInterface]
+    Contract -.->|Implementasi Konkret| Repository[EloquentUserRepository / EloquentTaskRepository]
     Repository -->|Eloquent Query| Model[Tasks / Gardens / User Model]
     Model --> Database[(MySQL Database)]
 ```
 
+*   **Repository Contracts (Interfaces)**: Ditempatkan di [app/Repositories/Contracts/](app/Repositories/Contracts/), berisi definisi kontrak fungsi database untuk `UserRepositoryInterface`, `TaskRepositoryInterface`, `GardenRepositoryInterface`, `PomodoroRepositoryInterface`, dan `RefreshTokenRepositoryInterface`.
+*   **Eloquent Repositories (Concrete Class)**: Ditempatkan di [app/Repositories/Eloquent/](app/Repositories/Eloquent/), berisi query Eloquent asli yang mengimplementasikan kontrak interface terkait.
+*   **Service Layer**: Ditempatkan di [app/Services/](app/Services/), mengelola logika bisnis inti (gamifikasi, level, streak, decay) secara modular.
+*   **Dependency Injection & Binding**: Diikat secara global melalui [app/Providers/RepositoryServiceProvider.php](app/Providers/RepositoryServiceProvider.php) dan didaftarkan pada [bootstrap/providers.php](bootstrap/providers.php).
+
 ---
 
-## ⚡ Fitur Backend Utama
+## Fitur Backend Utama
 
 ### 1. Sistem Gamifikasi Dinamis
 *   **XP & Leveling System**:
@@ -35,21 +41,22 @@ graph TD
 
 ### 3. Keamanan Sesi Kustom
 *   Otentikasi token akses menggunakan **Laravel Sanctum**.
-*   Menyediakan sistem rotasi kustom lewat tabel `refresh_tokens` untuk meminimalisasi risiko penyalahgunaan token akses yang kedaluwarsa.
+*   Menyediakan sistem rotasi kustom lewat tabel `refresh_tokens` untuk meminimalisasi risiko penyalahgunaan token akses yang kedaluwarsa via [AuthService.php](app/Services/Auth/AuthService.php).
 
 ---
 
-## 📂 Struktur Direktori Penting
+## Struktur Direktori Penting
 
 *   **Rute API**: `routes/api.php`
 *   **Logika Bisnis (Services)**: `app/Services/`
-*   **Akses Database (Repositories)**: `app/Repositories/`
+*   **Kontrak Repositori (Interfaces)**: `app/Repositories/Contracts/`
+*   **Implementasi Database (Eloquent)**: `app/Repositories/Eloquent/`
 *   **Model Database**: `app/Models/`
 *   **Request Validation**: `app/Http/Requests/`
 
 ---
 
-## ⚙️ Langkah Instalasi Lokal
+## Langkah Instalasi Lokal
 
 ### Prasyarat
 *   PHP >= 8.2

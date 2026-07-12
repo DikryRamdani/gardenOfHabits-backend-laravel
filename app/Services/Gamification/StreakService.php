@@ -3,34 +3,29 @@
 namespace App\Services\Gamification;
 
 use App\Models\User;
-use App\Repositories\UserRepository;
+use App\Repositories\Contracts\UserRepositoryInterface;
 
 class StreakService
 {
-    private UserRepository $userRepository;
+    private UserRepositoryInterface $userRepository;
 
-    public function __construct(UserRepository $userRepository)
+    public function __construct(UserRepositoryInterface $userRepository)
     {
         $this->userRepository = $userRepository;
     }
 
-    /**
-     * Dipanggil setiap kali user complete 1 task.
-     * - Jika streak_expired_at sudah lewat → reset ke 0 dulu
-     * - Increment streak_count + 1
-     * - Refresh streak_expired_at = now + 60 menit
-     */
     public function updateStreak(User $user): array
     {
         $streakBroken = false;
 
-        // Streak hangus jika waktu expired sudah lewat
+        # atur ulang streak user ke nol jika masa tenggang sudah kedaluwarsa
         if ($user->streak_expired_at && now()->isAfter($user->streak_expired_at)) {
             $this->userRepository->resetStreak($user);
             $user->refresh();
             $streakBroken = true;
         }
 
+        # tambahkan jumlah streak harian user via repository
         $user = $this->userRepository->incrementStreak($user);
 
         return [
@@ -42,6 +37,7 @@ class StreakService
 
     public function resetStreak(User $user): array
     {
+        # kosongkan catatan streak user via repository
         $user = $this->userRepository->resetStreak($user);
 
         return [
@@ -52,6 +48,7 @@ class StreakService
 
     public function checkAndResetStreak(User $user): User
     {
+        # periksa dan reset streak jika sudah melewati tenggat waktu
         if ($user->streak_expired_at && now()->isAfter($user->streak_expired_at)) {
             $user = $this->userRepository->resetStreak($user);
         }
@@ -61,16 +58,15 @@ class StreakService
     public function getStreakMultiplier(int $streak): float
     {
         if ($streak >= 15){
-            return 2.0;  // +100%
+            return 2.0;
         }else if ($streak >= 10) {
-            return 1.5;  // +50%
+            return 1.5;
         }else if ($streak >= 5) {
-            return 1.25; // +25%
+            return 1.25;
         }else if ($streak >= 1) {
-            return 1.1;  // +10%
+            return 1.1;
         }else{
             return 1.0;
         }
     }
 }
-

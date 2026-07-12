@@ -19,8 +19,10 @@ class AuthController extends Controller
 
     public function Login(LoginRequests $request)
     {
+        # jalankan proses autentikasi user via service
         $data = $this->authService->Login($request->validated());
 
+        # tangani kegagalan autentikasi jika kredensial tidak sesuai
         if (!$data) {
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
@@ -33,8 +35,10 @@ class AuthController extends Controller
 
     public function Register(RegisterRequests $request)
     {
+        # daftarkan user baru via service
         $data = $this->authService->Register($request->validated());
 
+        # kembalikan respon error jika proses registrasi gagal
         if (!$data) {
             return response()->json(['message' => 'Username already taken'], 409);
         }
@@ -47,6 +51,7 @@ class AuthController extends Controller
 
     public function Logout(Request $request)
     {
+        # bersihkan sesi login user via service
         $this->authService->Logout($request);
 
         return response()->json(['message' => 'Logout successful'], 200);
@@ -54,14 +59,18 @@ class AuthController extends Controller
 
     public function Refresh(Request $request)
     {
+        # dapatkan token refresh dari request input
         $refreshToken = $request->input('refresh_token');
 
+        # pastikan token refresh dikirimkan di dalam request
         if (!$refreshToken) {
             return response()->json(['message' => 'Refresh token is required'], 422);
         }
 
+        # perbarui masa aktif token akses via service
         $data = $this->authService->Refresh($refreshToken);
 
+        # tangani kegagalan jika token refresh tidak valid atau kedaluwarsa
         if (!$data) {
             return response()->json(['message' => 'Invalid or expired refresh token'], 401);
         }

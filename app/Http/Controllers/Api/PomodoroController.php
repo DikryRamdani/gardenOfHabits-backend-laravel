@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 
 class PomodoroController extends Controller
 {
-    protected PomodoroService $pomodoroService;
+    protected $pomodoroService;
 
     public function __construct(PomodoroService $pomodoroService)
     {
@@ -17,8 +17,10 @@ class PomodoroController extends Controller
 
     public function start(Request $request)
     {
+        # mulai sesi pomodoro baru untuk user via service
         $result = $this->pomodoroService->start($request->user());
 
+        # tangani respon sukses pendaftaran sesi baru
         if (!isset($result['error'])) {
             return response()->json([
                 'message' => 'Pomodoro started!, focus for 25 minutes.',
@@ -26,6 +28,7 @@ class PomodoroController extends Controller
             ], 201);
         }
 
+        # kembalikan respon error yang sesuai jika terjadi konflik status sesi
         return match ($result['error']) {
             'ALREADY_ACTIVE' => response()->json([
                 'message' => 'There is activated session. Finish it first before starting a new one.',
@@ -41,8 +44,10 @@ class PomodoroController extends Controller
 
     public function finish(Request $request)
     {
+        # selesaikan sesi pomodoro aktif milik user via service
         $result = $this->pomodoroService->finish($request->user());
 
+        # tangani respon sukses penyelesaian sesi pomodoro
         if (!isset($result['error'])) {
             return response()->json([
                 'message' => 'Pomodoro finished! Take a 5 minute break.',
@@ -50,6 +55,7 @@ class PomodoroController extends Controller
             ], 200);
         }
 
+        # tangani respon error yang sesuai jika sesi tidak dapat diselesaikan
         return match ($result['error']) {
             'NOT_FOUND' => response()->json(['message' => 'No active pomodoro session.'], 404),
             'TOO_EARLY' => response()->json([
@@ -62,6 +68,7 @@ class PomodoroController extends Controller
 
     public function status(Request $request)
     {
+        # ambil status keaktifan sesi pomodoro user via service
         $result = $this->pomodoroService->status($request->user());
 
         return response()->json([

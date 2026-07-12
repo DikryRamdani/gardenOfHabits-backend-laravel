@@ -17,8 +17,10 @@ class GardenController extends Controller
 
     public function show(Request $request)
     {
+        # hitung dan terapkan pengurangan HP kebun secara otomatis via service
         $garden = $this->gardenService->applyDecay($request->user());
 
+        # kembalikan respon error jika data kebun tidak ditemukan
         if (!$garden) {
             return response()->json(['message' => 'Garden not found'], 404);
         }

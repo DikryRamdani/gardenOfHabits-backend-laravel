@@ -1,14 +1,15 @@
 <?php
 
 namespace App\Services\Gamification;
+
 use App\Models\User;
-use App\Repositories\UserRepository;
+use App\Repositories\Contracts\UserRepositoryInterface;
 
 class LevelService
 {
-    private UserRepository $userRepository;
+    private UserRepositoryInterface $userRepository;
 
-    public function __construct(UserRepository $userRepository)
+    public function __construct(UserRepositoryInterface $userRepository)
     {
         $this->userRepository = $userRepository;
     }
@@ -18,13 +19,16 @@ class LevelService
         $leveledUp = false;
 
         while(true) {
+            # dapatkan tingkat level user saat ini via repository
             $currentLevel = $this->userRepository->currentLevel($user);
+            # dapatkan jumlah exp user saat ini via repository
             $currentExp = $this->userRepository->currentExp($user);
 
+            # hitung target minimal exp untuk naik ke level berikutnya
             $expReqForNextLevel = $this->getExpReqForNextLevel($currentLevel);
 
+            # proses kenaikan level jika akumulasi exp mencukupi
             if($currentExp >= $expReqForNextLevel) {
-                // Keep the current multiplier when decreasing EXP for leveling up
                 $user = $this->userRepository->updateLevel($user, 1);
                 $user = $this->userRepository->updateExp($user, -$expReqForNextLevel);
                 $leveledUp = true;

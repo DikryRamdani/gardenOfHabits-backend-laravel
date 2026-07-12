@@ -19,6 +19,7 @@ class TaskController extends Controller
 
     public function index(Request $request)
     {
+        # dapatkan daftar seluruh tugas milik user via service
         $tasks = $this->taskService->getAllTasks($request->query('status'));
 
         return response()->json([
@@ -29,6 +30,7 @@ class TaskController extends Controller
 
     public function store(StoreTaskRequest $request)
     {
+        # buat tugas baru untuk user via service
         $task = $this->taskService->createTask($request->validated());
 
         return response()->json([
@@ -39,8 +41,10 @@ class TaskController extends Controller
 
     public function show($id)
     {
+        # cari detail tugas spesifik user via service
         $task = $this->taskService->getTaskById($id);
 
+        # kembalikan respon error jika tugas tidak ditemukan
         if (!$task) {
             return response()->json(['message' => 'Task not found'], 404);
         }
@@ -53,8 +57,10 @@ class TaskController extends Controller
 
     public function update(UpdateTaskRequest $request, $id)
     {
+        # perbarui rincian tugas milik user via service
         $task = $this->taskService->updateTask($request->validated(), $id);
 
+        # kembalikan respon error jika tugas yang akan diperbarui tidak ditemukan
         if (!$task) {
             return response()->json(['message' => 'Task not found'], 404);
         }
@@ -67,8 +73,10 @@ class TaskController extends Controller
 
     public function destroy($id)
     {
+        # hapus data tugas milik user via service
         $task = $this->taskService->deleteTask($id);
 
+        # kembalikan respon error jika tugas yang akan dihapus tidak ditemukan
         if (!$task) {
             return response()->json(['message' => 'Task not found'], 404);
         }
@@ -81,8 +89,10 @@ class TaskController extends Controller
 
     public function complete($id)
     {
+        # tandai status pengerjaan tugas user sebagai selesai via service
         $result = $this->taskService->markTaskAsComplete($id);
 
+        # kembalikan respon error jika tugas tidak ada atau sudah selesai sebelumnya
         if (!$result) {
             return response()->json(['message' => 'Task not found or already completed'], 404);
         }

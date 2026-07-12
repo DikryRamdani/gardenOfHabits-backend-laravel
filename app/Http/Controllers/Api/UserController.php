@@ -21,6 +21,8 @@ class UserController extends Controller
     public function getProfile(Request $request)
     {
         $user = $request->user()->load('garden');
+        
+        # periksa dan reset status streak harian user via service
         $user = $this->streakService->checkAndResetStreak($user);
 
         return response()->json([
@@ -31,6 +33,7 @@ class UserController extends Controller
 
     public function updatePassword(Request $request)
     {
+        # validasi input password lama dan password baru
         $request->validate([
             'current_password' => 'required',
             'new_password' => 'required|min:8|different:current_password',
@@ -38,12 +41,14 @@ class UserController extends Controller
 
         $user = User::findOrFail($request->user()->id);
 
+        # pastikan kesesuaian input password lama dengan password terdaftar
         if (!Hash::check($request->current_password, $user->password)) {
             return response()->json([
                 'message' => 'The provided current password does not match.'
             ], 422);
         }
 
+        # enkripsi dan perbarui password baru user di database
         $user->password = Hash::make($request->new_password);
         $user->save();
 
@@ -54,16 +59,19 @@ class UserController extends Controller
 
     public function updateAvatar(Request $request)
     {
+        # validasi berkas gambar foto profil baru
         $request->validate([
             'profile_picture' => 'required|image|mimes:jpeg,png,jpg,gif|max:5120',
         ]);
 
         $user = $request->user();
 
+        # hapus berkas gambar foto profil lama dari disk penyimpanan
         if ($user->profile_picture) {
             Storage::disk('public')->delete(str_replace('storage/', '', $user->profile_picture));
         }
 
+        # simpan berkas gambar foto profil terupdate ke disk publik
         $path = $request->file('profile_picture')->store('profiles', 'public');
         $user->profile_picture = 'storage/' . $path;
         $user->save();
